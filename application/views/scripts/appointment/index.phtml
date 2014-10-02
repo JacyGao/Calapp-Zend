@@ -1,0 +1,60 @@
+<p><a href="<?php echo $this->url(
+        array(
+            'controller' => 'appointment',
+            'action'     => 'add'
+        ),
+        'default',
+        true) ?>">Add Appointment</a>
+    <a href="<?php echo $this->url(
+        array(
+            'controller' => 'appointment',
+            'action'     => 'exit'
+        ),
+        'default',
+        true) ?>">Exit</a>
+</p>
+
+<h1>Appointments</h1>
+<hr>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Location</th>
+        <th>Start Date</th>
+        <th>Start Time</th>
+        <th>End Date</th>
+        <th>End Time</th>
+        <th>Notes</th>
+        <th>Action</th>
+    </tr>
+    <?php if(isset($this->entries)):?>
+        <?php foreach ($this->entries as $entry): ?>
+            <tr>
+                <td><?php echo $this->escape($entry['id']) ?></td>
+                <td><?php echo $this->escape($entry['title']) ?></td>
+                <td><?php echo $this->escape($entry['location']) ?></td>
+                <td><?php echo $this->escape($entry['startDate']) ?></td>
+                <td><?php echo $this->escape($entry['startTime']) ?></td>
+                <td><?php echo $this->escape($entry['endDate']) ?></td>
+                <td><?php echo $this->escape($entry['endTime']) ?></td>
+                <td><?php echo $this->escape($entry['notes']) ?></td>
+                <td>
+                    <a href="<?php echo $this->url(
+                        array(
+                            'controller' => 'appointment',
+                            'action'     => 'edit'
+                        ),
+                        'default',
+                        true) ?>/id/<?php echo $this->escape($entry['id']) ?>">Edit</a> |
+                    <a href="<?php echo $this->url(
+                        array(
+                            'controller' => 'appointment',
+                            'action'     => 'delete'
+                        ),
+                        'default',
+                        true) ?>/id/<?php echo $this->escape($entry['id']) ?>">Delete</a></td>
+            </tr>
+        <?php endforeach ?>
+    <?php endif;?>
+</table>

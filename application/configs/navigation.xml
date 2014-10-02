@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <configdata>
+        <nav>
+            <calendar>
+                <label>Calendar</label>
+                <uri>/library/new/public/calendar</uri>
+            </calendar>
+            <appointment>
+                <label>Appointment</label>
+                <uri>/library/new/public/appointment</uri>
+            </appointment>
+        </nav>
+    </configdata>

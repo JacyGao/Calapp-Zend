@@ -1,0 +1,36 @@
+<form action="<?php echo $this->url()?>" method="post">
+    <table>
+        <tr>
+            <td>Title: </td>
+            <td><input type="text" name="title" value="<?php echo $this->data['title'];?>"/></td>
+        </tr>
+        <tr>
+            <td>Location: </td>
+            <td><input type="text" name="location" value="<?php echo $this->data['location'];?>"/></td>
+        </tr>
+        <tr>
+            <td>Start Date: </td>
+            <td><input type="text" name="startDate" value="<?php echo $this->data['startDate'];?>"/></td>
+        </tr>
+        <tr>
+            <td>Start Time: </td>
+            <td><input type="text" name="startTime" value="<?php echo $this->data['startTime'];?>"/></td>
+        </tr>
+        <tr>
+            <td>End Date: </td>
+            <td><input type="text" name="endDate" value="<?php echo $this->data['endDate'];?>"/></td>
+        </tr>
+        <tr>
+            <td>End Time: </td>
+            <td><input type="text" name="endTime" value="<?php echo $this->data['endTime'];?>"/></td>
+        </tr>
+        <tr>
+            <td>Notes: </td>
+            <td><input type="text" name="notes" value="<?php echo $this->data['notes'];?>"/></td>
+        </tr>
+        <tr>
+            <td><input type="submit"/></td>
+        </tr>
+    </table>
+
+</form>

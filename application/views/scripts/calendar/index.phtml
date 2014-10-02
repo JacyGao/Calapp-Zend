@@ -1,0 +1,44 @@
+<p><a href="<?php echo $this->url(
+        array(
+            'controller' => 'calendar',
+            'action'     => 'add'
+        ),
+        'default',
+        true) ?>">Add Calendar</a></p>
+
+<h1>Calendar Entries:</h1>
+<hr>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Action</th>
+    </tr>
+    <?php foreach ($this->entries as $entry): ?>
+        <tr>
+            <td><?php echo $this->escape($entry['id']) ?></td>
+            <td><?php echo $this->escape($entry['name']) ?></td>
+            <td><a href="<?php echo $this->url(
+                    array(
+                        'controller' => 'calendar',
+                        'action'     => 'entry'
+                    ),
+                    'default',
+                    true)?>/id/<?php echo $this->escape($entry['id']) ?>">Entry</a> |
+                <a href="<?php echo $this->url(
+                    array(
+                        'controller' => 'calendar',
+                        'action'     => 'edit'
+                    ),
+                    'default',
+                    true) ?>/id/<?php echo $this->escape($entry['id']) ?>">Edit</a> |
+                <a href="<?php echo $this->url(
+                    array(
+                        'controller' => 'calendar',
+                        'action'     => 'delete'
+                    ),
+                    'default',
+                    true) ?>/id/<?php echo $this->escape($entry['id']) ?>">Delete</a></td>
+        </tr>
+    <?php endforeach ?>
+</table>
