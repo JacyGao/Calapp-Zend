@@ -119,11 +119,11 @@ class UserController extends Zend_Controller_Action
         $cache = Zend_Registry::get('cache');
 
         // Define ics file header
-        /*
+
         header("Content-type: text/x-vcalendar");
         header("Cache-Control: max-age=7200, private, must-revalidate");
         header('Content-Disposition: attachment; filename="' . $userid . '.ics"');
-        */
+        
         $appointment = new Application_Model_Appointment();
         $calendar = new Application_Model_Calendar();
 
