@@ -1,8 +1,37 @@
 <?php
+require_once('DB/Database.php');
 
 class Application_Model_AppointmentMapper
 {
     protected $_dbTable;
+    public $_db;
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Constructor
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    void
+     */
+
+    public function __construct()
+    {
+        // Load specific database
+        $database = new Database();
+        $this->_db = $database->connectMongo();
+    }
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Set Database Table
+     *
+     * @author		Jacy Gao
+     * @return		object
+     * @param	    Application_Model_DbTable_Appointment
+     */
 
     public function setDbTable($dbTable)
     {
@@ -14,6 +43,16 @@ class Application_Model_AppointmentMapper
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /*
+     * Get Database Table
+     *
+     * @author		Jacy Gao
+     * @return		object
+     * @param	    void
+     */
+
     public function getDbTable()
     {
         if (null === $this->_dbTable) {
@@ -22,17 +61,24 @@ class Application_Model_AppointmentMapper
         return $this->_dbTable;
     }
 
+    // ------------------------------------------------------------------------
+
+    /*
+     * Insert session to the database
+     *
+     * @author		Jacy Gao
+     * @return		object
+     * @param	    Application_Model_Appointment
+     */
+
     public function save(Application_Model_Appointment $appointment)
     {
-        $connection = new Mongo("mongodb://jacy:temp@localhost"); // connect
-        $db = $connection->selectDB("ecal");
-
         $collection = $this->getDbTable();
-
         $this->session = new Zend_Session_Namespace('user_session');
         $cid = $this->session->id;
 
         if (null === ($id = $appointment->getId())) {
+
             $data = array(
                 '_id'   => $this->getNextSequence(),
                 'cid' => (int)$cid,
@@ -45,7 +91,8 @@ class Application_Model_AppointmentMapper
                 'notes' => $appointment->getNotes()
             );
             unset($data['id']);
-            $db->$collection->insert($data);
+
+            $this->_db->$collection->insert($data);
         } else {
             $data = array(
                 '$set'=> array(
@@ -58,21 +105,27 @@ class Application_Model_AppointmentMapper
                     'notes' => $appointment->getNotes()
                 )
             );
-            $db->$collection->update(array("_id" => $id),$data);
+            $this->_db->$collection->update(array("_id" => $id),$data);
         }
     }
 
-    /* Fetch all appointments */
+    // ------------------------------------------------------------------------
+
+    /*
+     * Fetch all appointments for the calendar ID
+     *
+     * @author		Jacy Gao
+     * @return		array
+     * @param	    void
+     */
+
     public function fetchAll()
     {
-        $connection = new Mongo("mongodb://jacy:temp@localhost"); // connect
-        $db = $connection->selectDB("ecal");
-
         $this->session = new Zend_Session_Namespace('user_session');
         $cid = $this->session->id;
 
         $collection = $this->getDbTable();
-        $resultSet = $db->$collection->find(array('cid'=>(int)$cid));
+        $resultSet = $this->_db->$collection->find(array('cid'=>(int)$cid));
         $entries   = array();
         foreach ($resultSet as $row) {
 
@@ -90,14 +143,53 @@ class Application_Model_AppointmentMapper
         return $entries;
     }
 
-    /* Fetch a single calender by id */
+    // ------------------------------------------------------------------------
+
+    /*
+     * Fetch all appointments for ICS export
+     *
+     * @author		Jacy Gao
+     * @return		object
+     * @param	    void
+     */
+
+    public function fetchExportData()
+    {
+        $collection = $this->getDbTable();
+        $resultSet = $this->_db->$collection->find();
+        $entries   = array();
+        foreach ($resultSet as $row) {
+
+            $entry['id'] = $row['_id'];
+            $entry['cid'] = $row['cid'];
+            $entry['title'] = $row['title'];
+            $entry['location'] = $row['location'];
+            $entry['startDate'] = $row['startDate'];
+            $entry['startTime'] = $row['startTime'];
+            $entry['endDate'] = $row['endDate'];
+            $entry['endTime'] = $row['endTime'];
+            $entry['notes'] = $row['notes'];
+            $entries[] = $entry;
+
+        }
+        return $entries;
+    }
+
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Fetch a single appointment by ID
+     *
+     * @author		Jacy Gao
+     * @return		array
+     * @param	    appointment.id
+     */
+
     public function fetch($id)
     {
-        $connection = new Mongo("mongodb://jacy:temp@localhost"); // connect
-        $db = $connection->selectDB("ecal");
-
         $collection = $this->getDbTable();
-        $result = $db->$collection->findOne(array('_id'=>(int)$id));
+        $result = $this->_db->$collection->findOne(array('_id'=>(int)$id));
 
         if (0 == count($result)) {
             return;
@@ -106,24 +198,39 @@ class Application_Model_AppointmentMapper
         return $result;
     }
 
+    // ------------------------------------------------------------------------
+
+    /*
+     * Remove appointment by ID
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    appointment.id
+     */
+
     public function remove($id)
     {
         //delete a document in the database
-        $connection = new Mongo("mongodb://jacy:temp@localhost"); // connect
-        $db = $connection->selectDB("ecal");
-
         $collection = $this->getDbTable();
 
-        $db->$collection->remove(array('_id' => (int)$id));
+        $this->_db->$collection->remove(array('_id' => (int)$id));
     }
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Generate auto increasement ID
+     *
+     * @author		Jacy Gao
+     * @return		int
+     * @param	    void
+     */
 
     public function getNextSequence()
     {
-        $connection = new Mongo("mongodb://jacy:temp@localhost"); // connect
-        $db = $connection->selectDB("ecal");
         $collection = $this->getDbTable();
 
-        $cursor = $db->$collection->find();
+        $cursor = $this->_db->$collection->find();
         $cursor->sort(array( '_id' => -1 ));
         $cursor->limit(1);
         foreach ($cursor as $row) {
@@ -139,6 +246,7 @@ class Application_Model_AppointmentMapper
         {
             $new = 1;
         }
+
         return (int)$new;
     }
 }

@@ -4,7 +4,21 @@
             'action'     => 'add'
         ),
         'default',
-        true) ?>">Add Calendar</a></p>
+        true) ?>">Add Calendar</a>
+    <a href="<?php echo str_replace("http","webcal",$this->serverUrl()).$this->url(
+        array(
+            'controller' => 'ical',
+            'action'     => $this->userid.".ics"
+        ),
+        'default',
+        true) ?>">Sync</a>
+    <a href="<?php echo $this->url(
+        array(
+            'controller' => 'user',
+            'action'     => 'logout'
+        ),
+        'default',
+        true) ?>">Logout</a></p>
 
 <h1>Calendar Entries:</h1>
 <hr>

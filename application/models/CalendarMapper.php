@@ -1,9 +1,40 @@
 <?php
+require_once('DB/Database.php');
 
 class Application_Model_CalendarMapper
 {
 
     protected $_dbTable;
+    public $_db;
+    public $_cache;
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Constructor
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    void
+     */
+
+    public function __construct()
+    {
+        // Load specific database
+        $database = new Database();
+        $this->_db = $database->connectMongo();
+
+    }
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Set Database Table
+     *
+     * @author		Jacy Gao
+     * @return		object
+     * @param	    Application_Model_DbTable_Calendar
+     */
 
     public function setDbTable($dbTable)
     {
@@ -15,6 +46,16 @@ class Application_Model_CalendarMapper
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /*
+     * Get Database Table
+     *
+     * @author		Jacy Gao
+     * @return		object
+     * @param	    void
+     */
+
     public function getDbTable()
     {
         if (null === $this->_dbTable) {
@@ -23,48 +64,57 @@ class Application_Model_CalendarMapper
         return $this->_dbTable;
     }
 
+    // ------------------------------------------------------------------------
+
+    /*
+     * Insert Calendar to the database
+     *
+     * @author		Jacy Gao
+     * @return		object
+     * @param	    Application_Model_Calendar
+     */
+
     public function save(Application_Model_Calendar $calendar)
     {
-        $connection = new Mongo("mongodb://jacy:temp@localhost"); // connect
-        $db = $connection->selectDB("ecal");
-
         $collection = $this->getDbTable();
+        $this->session = new Zend_Session_Namespace('user_session');
+        $uid = $this->session->userId;
 
         if (null === ($id = $calendar->getId())) {
             $data = array(
                 '_id'   => $this->getNextSequence(),
+                'userId' => (int)$uid,
                 'name'   => $calendar->getName()
             );
             unset($data['id']);
-            $db->$collection->insert($data);
+            $this->_db->$collection->insert($data);
         } else {
             $data = array(
                 '$set'=> array(
                 "name"   => $calendar->getName())
             );
-            $db->$collection->update(array("_id" => $id),$data);
+            $this->_db->$collection->update(array("_id" => $id),$data);
         }
+
     }
 
-    public function find($id, Application_Model_Calendar $calendar)
-    {
-        $result = $this->getDbTable()->find($id);
-        if (0 == count($result)) {
-            return;
-        }
-        $row = $result->current();
-        $calendar->setId($row->id)
-            ->setName($row->name);
-    }
+    // ------------------------------------------------------------------------
 
-    /* Fetch all calendars */
+    /*
+     * Fetch all Calendars for the User ID
+     *
+     * @author		Jacy Gao
+     * @return		array
+     * @param	    void
+     */
+
     public function fetchAll()
     {
-        $connection = new Mongo("mongodb://jacy:temp@localhost"); // connect
-        $db = $connection->selectDB("ecal");
+        $this->session = new Zend_Session_Namespace('user_session');
+        $uid = $this->session->userId;
 
         $collection = $this->getDbTable();
-        $resultSet = $db->$collection->find();
+        $resultSet = $this->_db->$collection->find(array('userId'=>(int)$uid));
         $entries   = array();
         foreach ($resultSet as $row) {
 
@@ -76,14 +126,47 @@ class Application_Model_CalendarMapper
         return $entries;
     }
 
-    /* Fetch a single calender by id */
+    // ------------------------------------------------------------------------
+
+    /*
+     * Fetch all Calendars By User ID
+     *
+     * @author		Jacy Gao
+     * @return		array
+     * @param	    user.id
+     */
+
+    public function fetchByUserId($userid)
+    {
+        $uid = $userid;
+        $collection = $this->getDbTable();
+        $resultSet = $this->_db->$collection->find(array('userId'=>(int)$uid));
+        $entries   = array();
+        foreach ($resultSet as $row) {
+
+            $entry['id'] = $row['_id'];
+            $entry['name'] = $row['name'];
+            $entries[] = $entry;
+
+        }
+        return $entries;
+    }
+
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Fetch a single calendar by User ID
+     *
+     * @author		Jacy Gao
+     * @return		array
+     * @param	    user.id
+     */
+
     public function fetch($id)
     {
-        $connection = new Mongo("mongodb://jacy:temp@localhost"); // connect
-        $db = $connection->selectDB("ecal");
-
         $collection = $this->getDbTable();
-        $result = $db->$collection->findOne(array('_id'=>(int)$id));
+        $result = $this->_db->$collection->findOne(array('_id'=>(int)$id));
 
         if (0 == count($result)) {
             return;
@@ -92,25 +175,40 @@ class Application_Model_CalendarMapper
         return $result;
     }
 
+    // ------------------------------------------------------------------------
+
+    /*
+     * Remove Calendar by ID
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    appointment.id
+     */
+
     public function remove($id)
     {
         //delete a document in the database
-        $connection = new Mongo("mongodb://jacy:temp@localhost"); // connect
-        $db = $connection->selectDB("ecal");
-
         $collection = $this->getDbTable();
 
-        $db->$collection->remove(array('_id' => (int)$id));
+        $this->_db->$collection->remove(array('_id' => (int)$id));
     }
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Generate auto increasement ID
+     *
+     * @author		Jacy Gao
+     * @return		int
+     * @param	    void
+     */
 
     public function getNextSequence()
     {
 
-        $connection = new Mongo("mongodb://jacy:temp@localhost"); // connect
-        $db = $connection->selectDB("ecal");
         $collection = $this->getDbTable();
 
-        $cursor = $db->$collection->find();
+        $cursor = $this->_db->$collection->find();
         $cursor->sort(array( '_id' => -1 ));
         $cursor->limit(1);
         foreach ($cursor as $row) {
@@ -123,9 +221,8 @@ class Application_Model_CalendarMapper
         $last = $entries[0]['id'];
         $new = $last + 1;
 
-        return $new;
+        return (int)$new;
     }
-
 
 }
 

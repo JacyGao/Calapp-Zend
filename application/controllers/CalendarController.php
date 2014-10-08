@@ -3,17 +3,67 @@
 class CalendarController extends Zend_Controller_Action
 {
 
+    public $_cache;
+    public $_userId;
+    public $_userName;
+
     public function init()
     {
         /* Initialize action controller here */
 
+        // Check if user session has been set-up
+        $this->session = new Zend_Session_Namespace('user_session');
+        if(!$this->session->username || !$this->session->userId)
+        {
+            $this->redirect('/user/login');
+        }
+
+        $this->_userId = $this->session->userId;
+        $this->_UserName = $this->session->username;
+        $this->_cache = Zend_Registry::get('cache');
     }
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Index Page
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    void
+     */
 
     public function indexAction()
     {
+        $this->session = new Zend_Session_Namespace('user_session');
+        $userid = $this->session->userId;
+
         $calendar = new Application_Model_CalendarMapper();
-        $this->view->entries = $calendar->fetchAll();
+        $allAppointment = new Application_Model_AppointmentMapper();
+
+        if(!$result = $this->_cache->load("user".$this->_userId))
+        {
+            $this->_cache->save(serialize($calendar->fetchAll()),"user".$this->_userId);
+        }
+        if(!$result = $this->_cache->load("allAppointment"))
+        {
+            $data = serialize($allAppointment->fetchExportData());
+            $this->_cache->save($data, "allAppointment");
+        }
+
+        $this->view->entries = unserialize($this->_cache->load("user".$this->_userId));
+        $this->view->userid = $userid;
     }
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Add Calendar
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    void
+     */
 
     public function addAction()
     {
@@ -23,9 +73,15 @@ class CalendarController extends Zend_Controller_Action
 
         if ($this->getRequest()->isPost()) {
             if ($form->isValid($request->getPost())) {
+
+                // Insert new document to Calendar collection
                 $calendar = new Application_Model_Calendar($form->getValues());
                 $mapper  = new Application_Model_CalendarMapper();
                 $mapper->save($calendar);
+
+                // clean cache
+                $this->_cache->remove('user'.$this->_userId);
+
                 return $this->_helper->redirector('index');
             }
             else
@@ -37,14 +93,38 @@ class CalendarController extends Zend_Controller_Action
         $this->view->form = $form;
     }
 
+    // ------------------------------------------------------------------------
+
+    /*
+     * Delete Calendar
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    void
+     */
+
     public function deleteAction()
     {
         $request = $this->getRequest();
 
         $mapper  = new Application_Model_CalendarMapper();
         $mapper->remove($request->id);
+
+        // clean cache
+        $this->_cache->remove('user'.$this->_userId);
+
         return $this->_helper->redirector('index');
     }
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Edit Calendar
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    void
+     */
 
     public function editAction()
     {
@@ -66,6 +146,9 @@ class CalendarController extends Zend_Controller_Action
             $mapper  = new Application_Model_CalendarMapper();
             $mapper->save($calendar);
 
+            // clean cache
+            $this->_cache->remove('user'.$this->_userId);
+
             return $this->_helper->redirector('index');
 
         }
@@ -74,14 +157,26 @@ class CalendarController extends Zend_Controller_Action
         $this->view->data = $data;
     }
 
+    // ------------------------------------------------------------------------
+
+    /*
+     * Enter Calendar
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    void
+     */
+
     public function entryAction()
     {
         $request = $this->getRequest();
         $calendar = new Zend_Session_Namespace('user_session');
         $calendar->id = $request->id;
 
-        $this->_redirect('/appointment/');
+        $this->redirect('/appointment/');
     }
+
+    // ------------------------------------------------------------------------
 
 }
 

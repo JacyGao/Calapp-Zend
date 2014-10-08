@@ -23,7 +23,7 @@ class Application_Model_Appointment
     {
         $method = 'set' . $name;
         if (('mapper' == $name) || !method_exists($this, $method)) {
-            throw new Exception('Invalid calendar property');
+            throw new Exception('Invalid appointment property');
         }
         $this->$method($value);
     }
@@ -32,7 +32,7 @@ class Application_Model_Appointment
     {
         $method = 'get' . $name;
         if (('mapper' == $name) || !method_exists($this, $method)) {
-            throw new Exception('Invalid calendar property');
+            throw new Exception('Invalid appointment property');
         }
         return $this->$method();
     }

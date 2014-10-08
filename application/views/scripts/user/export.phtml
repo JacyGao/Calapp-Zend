@@ -1,0 +1,48 @@
+<?php
+function dateToCal($date, $time) {
+
+    $myDate = DateTime::createFromFormat('d/m/Y', $date);
+    $newDateString = $myDate->format('Ymd');
+
+    $myTime = DateTime::createFromFormat('H:i', $time);
+    $newTimeString = "T".$myTime->format('Hi')."00Z";
+
+        $newDateTimeString = $newDateString.$newTimeString;
+    return $newDateTimeString;
+}
+
+// Escapes a string of characters
+function escapeString($string) {
+    return preg_replace('/([\,;])/','\\\$1', $string);
+}
+
+function timestamp($timestamp) {
+    return date('Ymd\THis\Z', $timestamp);
+}
+
+?>
+BEGIN:VCALENDAR
+VERSION:2.0
+X-WR-CALNAME:Jacy
+PRODID:-//hacksw/handcal//NONSGML v1.0//EN
+CALSCALE:GREGORIAN
+<?foreach($this->data as $d):?>
+BEGIN:VEVENT
+DTEND:<?php echo dateToCal($d['endDate'],$d['endTime'])?>
+
+UID:<?= uniqid()?>
+
+DTSTAMP:<?php echo timestamp(time())?>
+
+LOCATION:<?php echo escapeString($d['location'])?>
+
+DESCRIPTION:<?= escapeString($d['title'])?>
+
+URL;VALUE=URI:
+SUMMARY:<?= escapeString($d['title'])?>
+
+DTSTART:<?php echo dateToCal($d['startDate'],$d['startTime'])?>
+
+END:VEVENT
+<?endforeach;?>
+END:VCALENDAR

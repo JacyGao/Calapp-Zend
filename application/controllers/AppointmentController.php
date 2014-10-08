@@ -3,20 +3,61 @@
 class AppointmentController extends Zend_Controller_Action
 {
 
+    public $_cache;
+    public $_cid;
+
     public function init()
     {
         /* Initialize action controller here */
+
+        // Check if Calendar session has been set-up
         $this->session = new Zend_Session_Namespace('user_session');
         if(!$this->session->id)
 
-        $this->_redirect('/calendar/');
+        $this->redirect('/calendar/');
+
+        $this->_cid = $this->session->id;
+        $this->_cache = Zend_Registry::get('cache');
+
     }
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Index Page
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    void
+     */
 
     public function indexAction()
     {
         $appointment = new Application_Model_AppointmentMapper();
-        $this->view->entries = $appointment->fetchAll();
+
+        if(!$result = $this->_cache->load("calendar".$this->_cid))
+        {
+            $data = serialize($appointment->fetchAll());
+            $this->_cache->save($data, "calendar".$this->_cid);
+        }
+        if(!$result = $this->_cache->load("allAppointment"))
+        {
+            $data = serialize($appointment->fetchExportData());
+            $this->_cache->save($data, "allAppointment");
+        }
+
+        $this->view->entries = unserialize($this->_cache->load("calendar".$this->_cid));
     }
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Add Appointment
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    void
+     */
 
     public function addAction()
     {
@@ -26,13 +67,36 @@ class AppointmentController extends Zend_Controller_Action
         if ($this->getRequest()->isPost()) {
             if ($form->isValid($request->getPost())) {
 
-                $appointment = new Application_Model_Appointment($form->getValues());
+                // Retrive Post Value array
+                $values = $form->getValues();
+
+                // Date Time Validation
+                if($values['startDate'] > $values['endDate'])
+                {
+                    exit('The data entered is invalid!');
+                }
+                if($values['startDate'] == $values['endDate'])
+                {
+                    if($values['startTime'] >= $values['endTime'])
+                    {
+                        exit('The data entered is invalid!');
+                    }
+                }
+
+                // success
+                $appointment = new Application_Model_Appointment($values);
                 $mapper  = new Application_Model_AppointmentMapper();
                 $mapper->save($appointment);
+
+                // clean cache
+                $this->_cache->remove("calendar".$this->_cid);
+                $this->_cache->remove("allAppointment");
+
                 return $this->_helper->redirector('index');
             }
             else
             {
+                // fail, return error
                 exit('The data entered is invalid!');
             }
         }
@@ -40,14 +104,39 @@ class AppointmentController extends Zend_Controller_Action
         $this->view->form = $form;
     }
 
+    // ------------------------------------------------------------------------
+
+    /*
+     * Delete Appointment
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    void
+     */
+
     public function deleteAction()
     {
         $request = $this->getRequest();
 
         $mapper  = new Application_Model_AppointmentMapper();
         $mapper->remove($request->id);
+
+        // clean cache
+        $this->_cache->remove("calendar".$this->_cid);
+        $this->_cache->remove("allAppointment");
+
         return $this->_helper->redirector('index');
     }
+
+    // ------------------------------------------------------------------------
+
+    /*
+     * Edit Appointment
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    void
+     */
 
     public function editAction()
     {
@@ -74,6 +163,10 @@ class AppointmentController extends Zend_Controller_Action
             $mapper  = new Application_Model_AppointmentMapper();
             $mapper->save($appointment);
 
+            // clean cache
+            $this->_cache->remove("calendar".$this->_cid);
+            $this->_cache->remove("allAppointment");
+
             return $this->_helper->redirector('index');
 
         }
@@ -82,11 +175,23 @@ class AppointmentController extends Zend_Controller_Action
 
     }
 
+    // ------------------------------------------------------------------------
+
+    /*
+     * Exit the current Calendar
+     *
+     * @author		Jacy Gao
+     * @return		void
+     * @param	    void
+     */
+
     public function exitAction()
     {
         $this->session = new Zend_Session_Namespace('user_session');
         unset($this->session->id);
 
-        $this->_redirect('/calendar/');
+        $this->redirect('/calendar/');
     }
+
+    // ------------------------------------------------------------------------
 }

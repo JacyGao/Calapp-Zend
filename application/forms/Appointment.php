@@ -29,6 +29,7 @@ class Application_Form_Appointment extends Zend_Form
                 new Zend_Validate_Date(array('format' => 'dd/MM/yyyy'))
             ),
             'placeholder' => "dd/MM/yyyy",
+            'id' => "startDate",
             'filters'    => array('StringTrim')
         ));
 
@@ -40,17 +41,19 @@ class Application_Form_Appointment extends Zend_Form
                 new Zend_Validate_Date(array('format' => 'H:i'))
             ),
             'placeholder' => "Hour:Minute",
+            'id' => "startTime",
             'filters'    => array('StringTrim')
         ));
 
         // Add a End Date element
         $this->addElement('text', 'endDate', array(
             'label'      => 'End Date:',
+            'required'   => true,
             'validators'  => array (
                 new Zend_Validate_Date(array('format' => 'dd/MM/yyyy'))
             ),
             'placeholder' => "dd/MM/yyyy",
-            'required'   => true,
+            'id' => "endDate",
             'filters'    => array('StringTrim')
         ));
 
@@ -62,6 +65,7 @@ class Application_Form_Appointment extends Zend_Form
                 new Zend_Validate_Date(array('format' => 'H:i'))
             ),
             'placeholder' => "Hour:Minute",
+            'id' => "endTime",
             'filters'    => array('StringTrim')
         ));
 
