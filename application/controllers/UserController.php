@@ -133,7 +133,6 @@ class UserController extends Zend_Controller_Action
         $calendar = unserialize($cache->load("user".$userid));
         $appointment = unserialize($cache->load("allAppointment"));
 
-        $exportData = array();
         //$appointment = $appointmentMapper->fetchExportData();
         //$calendar = $calendarMapper -> fetchByUserId($userid);
 
