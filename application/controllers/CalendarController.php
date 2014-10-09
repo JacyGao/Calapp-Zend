@@ -45,10 +45,10 @@ class CalendarController extends Zend_Controller_Action
         {
             $this->_cache->save(serialize($calendar->fetchAll()),"user".$this->_userId);
         }
-        if(!$result = $this->_cache->load("allAppointment"))
+        if(!$result = $this->_cache->load("appointment"))
         {
-            $data = serialize($allAppointment->fetchExportData());
-            $this->_cache->save($data, "allAppointment");
+            $data = serialize($allAppointment->fetchAll('export'));
+            $this->_cache->save($data, "appointment");
         }
 
         $this->view->entries = unserialize($this->_cache->load("user".$this->_userId));

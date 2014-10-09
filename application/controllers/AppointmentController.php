@@ -40,10 +40,11 @@ class AppointmentController extends Zend_Controller_Action
             $data = serialize($appointment->fetchAll());
             $this->_cache->save($data, "calendar".$this->_cid);
         }
-        if(!$result = $this->_cache->load("allAppointment"))
+
+        if(!$result = $this->_cache->load("appointment"))
         {
-            $data = serialize($appointment->fetchExportData());
-            $this->_cache->save($data, "allAppointment");
+            $data = serialize($appointment->fetchAll('export'));
+            $this->_cache->save($data, "appointment");
         }
 
         $this->view->entries = unserialize($this->_cache->load("calendar".$this->_cid));
@@ -90,7 +91,7 @@ class AppointmentController extends Zend_Controller_Action
 
                 // clean cache
                 $this->_cache->remove("calendar".$this->_cid);
-                $this->_cache->remove("allAppointment");
+                $this->_cache->remove("appointment");
 
                 return $this->_helper->redirector('index');
             }
@@ -123,7 +124,7 @@ class AppointmentController extends Zend_Controller_Action
 
         // clean cache
         $this->_cache->remove("calendar".$this->_cid);
-        $this->_cache->remove("allAppointment");
+        $this->_cache->remove("appointment");
 
         return $this->_helper->redirector('index');
     }
@@ -165,7 +166,7 @@ class AppointmentController extends Zend_Controller_Action
 
             // clean cache
             $this->_cache->remove("calendar".$this->_cid);
-            $this->_cache->remove("allAppointment");
+            $this->_cache->remove("appointment");
 
             return $this->_helper->redirector('index');
 

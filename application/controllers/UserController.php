@@ -123,7 +123,7 @@ class UserController extends Zend_Controller_Action
         header("Content-type: text/x-vcalendar");
         header("Cache-Control: max-age=7200, private, must-revalidate");
         header('Content-Disposition: attachment; filename="' . $userid . '.ics"');
-        
+
         $appointment = new Application_Model_Appointment();
         $calendar = new Application_Model_Calendar();
 
@@ -131,9 +131,9 @@ class UserController extends Zend_Controller_Action
         $appointmentMapper = new Application_Model_AppointmentMapper();
 
         $calendar = unserialize($cache->load("user".$userid));
-        $appointment = unserialize($cache->load("allAppointment"));
+        $appointment = unserialize($cache->load("appointment"));
 
-        //$appointment = $appointmentMapper->fetchExportData();
+        //$appointment = $appointmentMapper->fetchAll('export');
         //$calendar = $calendarMapper -> fetchByUserId($userid);
 
         $exportData = array();

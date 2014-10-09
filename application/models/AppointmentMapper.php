@@ -112,51 +112,27 @@ class Application_Model_AppointmentMapper
     // ------------------------------------------------------------------------
 
     /*
-     * Fetch all appointments for the calendar ID
+     * Fetch all appointments / appointments for the calendar ID
      *
      * @author		Jacy Gao
      * @return		array
-     * @param	    void
+     * @param	    type (set as 'export' will fetch all appointments regardless calendar ID)
      */
 
-    public function fetchAll()
+    public function fetchAll($type = NULL)
     {
         $this->session = new Zend_Session_Namespace('user_session');
         $cid = $this->session->id;
 
         $collection = $this->getDbTable();
-        $resultSet = $this->_db->$collection->find(array('cid'=>(int)$cid));
-        $entries   = array();
-        foreach ($resultSet as $row) {
-
-            $entry['id'] = $row['_id'];
-            $entry['title'] = $row['title'];
-            $entry['location'] = $row['location'];
-            $entry['startDate'] = $row['startDate'];
-            $entry['startTime'] = $row['startTime'];
-            $entry['endDate'] = $row['endDate'];
-            $entry['endTime'] = $row['endTime'];
-            $entry['notes'] = $row['notes'];
-            $entries[] = $entry;
-
+        if($type == 'export')
+        {
+            $resultSet = $this->_db->$collection->find();
         }
-        return $entries;
-    }
-
-    // ------------------------------------------------------------------------
-
-    /*
-     * Fetch all appointments for ICS export
-     *
-     * @author		Jacy Gao
-     * @return		object
-     * @param	    void
-     */
-
-    public function fetchExportData()
-    {
-        $collection = $this->getDbTable();
-        $resultSet = $this->_db->$collection->find();
+        else
+        {
+            $resultSet = $this->_db->$collection->find(array('cid'=>(int)$cid));
+        }
         $entries   = array();
         foreach ($resultSet as $row) {
 
@@ -174,7 +150,6 @@ class Application_Model_AppointmentMapper
         }
         return $entries;
     }
-
 
     // ------------------------------------------------------------------------
 
